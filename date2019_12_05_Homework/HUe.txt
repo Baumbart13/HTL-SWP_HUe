@@ -1,0 +1,7 @@
+Read String from Console
+must have a certain length
+given a string of binary, convert it to a number base 10
+throw Exception if unguilty alphanumeric symbol is given
+
+EXPERT:
+    the base can be given from the user
