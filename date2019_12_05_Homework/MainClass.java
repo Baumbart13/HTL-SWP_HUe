@@ -4,18 +4,9 @@ import java.util.Scanner;
 
 public class MainClass {
 
-    public static String readString(){
-        Scanner reader = new Scanner(System.in);
-        String in = "";
-        try {
-            in = reader.nextLine();
-        }catch(Exception e){
-            System.out.println("Bruh, wat happened?");
-            e.printStackTrace();
-        }finally{
-            reader.close();
-            return in;
-        }
+    public static boolean checkInput(String input){
+
+        return true || false;
     }
 
     public static void main(String[] args) {
@@ -24,7 +15,8 @@ public class MainClass {
 
         try {
             System.out.println("gimme number");
-            input = readString();
+            input = UI.readString();
+            checkInput(input);
 
             /*if (!(input.length() >= 8)) {
                 throw new LengthException();

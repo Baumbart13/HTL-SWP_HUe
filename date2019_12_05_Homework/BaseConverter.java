@@ -15,7 +15,7 @@ public class BaseConverter {
         this.baseOut = 0;
     }
 
-    private static Integer toDecimal(Integer input, Integer baseIn){
+    private static Integer baseToDecimal(Integer input, Integer baseIn){
         Integer sum = 0;
 
         int power = input.toString().length()-1;
@@ -26,13 +26,31 @@ public class BaseConverter {
         return sum;
     }
 
-    private static Integer toBase(Integer input, Integer baseOut){
+    /*private static Integer decimalToBase(Integer input, Integer baseOut){
         StringBuilder sum = new StringBuilder("");
-        for( ; input > 1; input /= baseOut){
+        for( ; input > 0; input /= baseOut){
+            sum.append( input % baseOut );
+        }
+    }*/
+
+
+    /*public int calculationFromDezToN(int valueNumbersystem, int value) {	//	from dez in other
+        int[] arrResult = new int[proofLength(valueNumbersystem, value)];
+        int temp = value;
+        for (int i = 0; i < arrResult.length; i++) {
+            arrResult[arrResult.length - i - 1] = temp % valueNumbersystem;
+            temp = temp / valueNumbersystem;
+        }
+        return (arrayIntToInt(arrResult));
+    }*/
+
+    private static Integer decimalToBase(Integer input, Integer baseOut){
+        StringBuilder sum = new StringBuilder("");
+        for( ; input > 0; input /= baseOut){
             sum.append(input%baseOut);
         }
 
-        return Integer.parseInt(sum.toString());
+        return Integer.parseInt(sum.reverse().toString());
     }
 
     public int convert(int input) throws BaseException{
@@ -41,7 +59,7 @@ public class BaseConverter {
             throw new BaseException("Same Bases!");
         }
 
-        return toBase(toDecimal(input, this.baseIn), baseOut);
+        return decimalToBase(baseToDecimal(input, this.baseIn), baseOut);
     }
 
     public static int convert(int input, int baseIn, int baseOut) throws BaseException{
@@ -50,12 +68,11 @@ public class BaseConverter {
             throw new BaseException("Same Bases!");
         }
 
-        return (baseIn > baseOut) ? toDecimal(toBase(input, baseIn), baseOut) : toBase(toDecimal(input, baseIn), baseOut);
-
-        /*if(baseIn > baseOut){
-            return toDecimal(toBase(input, baseIn), baseOut);
+        if(baseIn == 10){
+            return decimalToBase(input, baseOut);
         }
-        return toBase(toDecimal(input, baseIn), baseOut);*/
+        return decimalToBase(baseToDecimal(input, baseIn), baseOut);
+
     }
 
     public String toString(){
