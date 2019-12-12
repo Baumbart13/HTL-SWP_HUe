@@ -16,9 +16,7 @@ public class UI {
         }catch(Exception e){
             System.out.println("Bruh, what happened?");
             e.printStackTrace();
-        }finally{
-            reader.close();
-            return in;
         }
+        return in;
     }
 }
