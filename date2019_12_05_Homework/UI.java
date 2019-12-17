@@ -12,7 +12,7 @@ public class UI {
     public static String readString(){
         String in = "";
         try{
-            in = reader.nextLine();
+            in = reader.nextLine().trim();
         }catch(Exception e){
             System.out.println("Bruh, what happened?");
             e.printStackTrace();
