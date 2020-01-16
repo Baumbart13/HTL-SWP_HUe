@@ -1,0 +1,12 @@
+Ticketshop programmieren
+->	Verschiedene Tickets können gekauft werden
+	(Musik, Konzert, Sport, etc)
+->	Verschiedene Tickets haben verschiedene Preisklassen (Abstufungen)
+	(zB je nach Sitzreihe in Kino)
+->	Kunden können sich registrieren
+	(id, name, email, adresse, welche Tickets)
+->	Kunde kann gewisse Anzahl an bestimmten Tickets kaufen
+	und alle dazugehörigen Daten (wann, welche, wieviele Tickets, welcher Preis gekauft?)
+->	Wieviele Tickets gibt es pro Festival?
+	Wieviele stehen zum Verkauf frei?
+->	"Abstract", "Interface", "Exception" verwenden
