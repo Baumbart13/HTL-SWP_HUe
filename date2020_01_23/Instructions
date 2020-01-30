@@ -1,0 +1,9 @@
+2D-Array anlegen
+enum muss verwendet werden (für zB Figuren)
+interface oder abstrakte klasse muss vorkommen
+spielzustand muss ausgegeben werden können
+3 methoden zum überprüfen:
+    wieviele weiße figuren?
+    wieviele schwarze figuren?
+    weiviele figuren gesamt
+das spiel muss dynamisch programmiert sein
