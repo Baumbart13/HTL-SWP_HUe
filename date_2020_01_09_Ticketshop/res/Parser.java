@@ -1,4 +1,4 @@
-package date_2020_01_09_Ticketshop.res;
+package date2020_01_09_Ticketshop.res;
 
 import java.io.File;
 import java.io.FileInputStream;

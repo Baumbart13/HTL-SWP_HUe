@@ -1,4 +1,4 @@
-package date_2020_01_09_Ticketshop.res;
+package date2020_01_09_Ticketshop.res;
 
 public interface ConsoleSpecs {
     public static final String ANSI_RESET = "\u001B[0m";

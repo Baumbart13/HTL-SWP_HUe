@@ -1,19 +1,14 @@
-package date_2020_01_09_Ticketshop.res;
+package date2020_01_09_Ticketshop.res;
 
-import date_2020_01_09_Ticketshop.UI;
-import org.apache.poi.ss.formula.functions.Column;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Iterator;
 
-public class ExcelTableParser extends date_2020_01_09_Ticketshop.res.Parser{
+public class ExcelTableParser extends date2020_01_09_Ticketshop.res.Parser{
 
     private XSSFWorkbook wb;
 
