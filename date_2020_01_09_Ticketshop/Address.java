@@ -1,11 +1,9 @@
-package date_2020_01_09_Ticketshop;
+package date2020_01_09_Ticketshop;
 
-import date_2020_01_09_Ticketshop.res.ExcelTableParser;
-
-import java.math.BigInteger;
+import date2020_01_09_Ticketshop.res.ExcelTableParser;
 
 public class Address {
-    private static ExcelTableParser parser = new ExcelTableParser("C:\\Users\\Baumbart13\\IdeaProjects\\Programmieren - 2019-11-07\\src\\date_2020_01_09_Ticketshop\\res\\PostalCode_AT.xlsx");
+    private static ExcelTableParser parser = new ExcelTableParser("C:\\Users\\Baumbart13\\IdeaProjects\\Programmieren - 2019-11-07\\src\\date2020_01_09_Ticketshop\\res\\PostalCode_AT.xlsx");
 
     public final Places place = Places.AT;
     protected int postalCode;

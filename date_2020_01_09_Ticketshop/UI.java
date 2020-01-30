@@ -1,10 +1,10 @@
-package date_2020_01_09_Ticketshop;
+package date2020_01_09_Ticketshop;
 
 import java.util.Scanner;
-import date_2020_01_09_Ticketshop.Exceptions.CantCreateException;
+import date2020_01_09_Ticketshop.Exceptions.CantCreateException;
 
-public class UI implements date_2020_01_09_Ticketshop.res.ConsoleSpecs{
-    static Scanner reader= new Scanner(System.in);
+public class UI implements date2020_01_09_Ticketshop.res.ConsoleSpecs{
+    private static Scanner reader= new Scanner(System.in);
 
     private UI() throws CantCreateException {
         throw new CantCreateException();

@@ -1,7 +1,7 @@
-package date_2020_01_09_Ticketshop;
+package date2020_01_09_Ticketshop;
 
 public enum Places {
-    AT,
-    DE,
-    CH;
+    AT, // Austria
+    DE, // Germany
+    CH; // Schwitz
 }
