@@ -1,4 +1,4 @@
-package date_2020_01_09_Ticketshop.Exceptions;
+package date2020_01_09_Ticketshop.Exceptions;
 
 public class CantCreateException extends Exception{
 
