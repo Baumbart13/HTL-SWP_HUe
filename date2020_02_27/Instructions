@@ -1,0 +1,7 @@
+-> wieviele montage im Jahr 2020 (dynamische tage, dynamisches jahr)
+-> wieviele montage seit 1900 (dynamische tage, dynamische jahre)
+-> letzter montag des jahres soll formatiert ausgegeben werden: (buch seite 213)
+    -> YYYY-MM-DD
+    -> MM-DD-YY
+-> tag wählen, wieviele tage bis dahin?
+-> tag wählen, welcher wochentag war das?
