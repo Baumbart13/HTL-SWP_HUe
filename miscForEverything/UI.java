@@ -2,6 +2,7 @@ package miscForEverything;
 
 import miscForEverything.CustomExceptions.CantCreateException;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 public class UI implements ConsoleSpecs{
@@ -9,6 +10,14 @@ public class UI implements ConsoleSpecs{
 
     private UI() throws CantCreateException {
         throw new CantCreateException();
+    }
+
+    public static void waitForKeypress(){
+        try{
+            System.in.read();
+        }catch(IOException e){
+            System.err.println("Nothing special to worry about" + System.lineSeparator() + e.getMessage());
+        }
     }
 
     public static String readString(){
@@ -19,21 +28,23 @@ public class UI implements ConsoleSpecs{
             System.err.println("Bruh, what happened?");
             e.printStackTrace();
         }
+        reader = reader.reset();
         return in.trim();
     }
 
     public static int readInteger(){
-        Integer in = 0;
+        Integer out = 0;
         try{
-            in = reader.nextInt();
+            out = Integer.parseInt(reader.nextLine().trim());
         }catch(NumberFormatException e){
-            System.err.println("Mate, that is not a number" + System.lineSeparator() + "Here another try:");
+            System.err.println("Mate, this is not a number" + System.lineSeparator() + "Here another try:");
             return readInteger();
         }catch(Exception e){
             System.err.println("Bruh, what happened?");
             e.printStackTrace();
         }
-        return in;
+        reader = reader.reset();
+        return out;
     }
 
     public static String newLine(){

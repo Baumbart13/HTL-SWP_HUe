@@ -139,8 +139,8 @@ public class Dateformats {
     }
 
     public static void main(String[] args){
-        while(!choice.equalsIgnoreCase("x")){
-            if(!menu()){
+        while(!menu.input.toString().equalsIgnoreCase("x")){
+            if(!menu.menu()){
                 System.gc();
                 break;
             }

@@ -12,17 +12,17 @@ public class DateSearches {
     public static int howManyMondays(LocalDate until){
         LocalDate today = LocalDate.now();
 
-        if(today.isAfter(until)){
+        if(today.isBefore(until)){
             return -1;
         }
 
         int out = 0;
-        while(today.isBefore(until)){
+        while(today.isAfter(until)){
             if(today.getDayOfWeek().equals(DayOfWeek.MONDAY)){
                 ++out;
-                today = today.plusWeeks(1);
+                today = today.minusWeeks(1);
             }else {
-                today = today.plusDays(1);
+                today = today.minusDays(1);
             }
         }
 
@@ -32,7 +32,7 @@ public class DateSearches {
     public static int howManyMondaysInYear(LocalDate year){
         int startYear = year.getYear()+1;
         int mondays = 0;
-        while(year.getYear() == startYear){
+        while(!(year.getYear() == startYear)){
             if(year.getDayOfWeek() == DayOfWeek.MONDAY){
                 ++mondays;
                 year = year.plusWeeks(1);
@@ -48,12 +48,14 @@ public class DateSearches {
         if(year < LocalDate.MIN.getYear() || year > LocalDate.MAX.getYear()){
             return -1;
         }
-        return howManyMondaysInYear(LocalDate.of(year,Month.JANUARY, 0));
+        return howManyMondaysInYear(LocalDate.of(year, Month.JANUARY, 1));
     }
 
     public static int howManyMondays(LocalDate since, LocalDate until){
         if(since.isAfter(until)){
-            return -1;
+            LocalDate temp = since;
+            since = until;
+            until = temp;
         }
 
         int out = 0;
@@ -76,8 +78,8 @@ public class DateSearches {
     }
 
     /**
-     * @param americanFormat true formats to MM-DD-YY
-     *                       false formats to YYYY-MM-DD
+     * @param americanFormat true formats to american way: MM-DD-YY
+     *                       false formats to european way: YYYY-MM-DD
      */
     public static String lastMondayOfYear(int year, boolean americanFormat){
         LocalDate date = LocalDate.of(year, Month.DECEMBER, Month.DECEMBER.maxLength());
@@ -86,9 +88,9 @@ public class DateSearches {
             date = date.minusDays(1);
         }
 
-        StringBuilder monthOut = new StringBuilder(date.getMonthValue());
-        StringBuilder dayOut = new StringBuilder(date.getDayOfMonth());
-        StringBuilder yearOut = new StringBuilder(date.getYear());
+        StringBuilder monthOut = new StringBuilder(Integer.toString(date.getMonthValue()));
+        StringBuilder dayOut = new StringBuilder(Integer.toString(date.getDayOfMonth()));
+        StringBuilder yearOut = new StringBuilder(Integer.toString(date.getYear()));
 
         if(monthOut.length() == 1){
             monthOut.insert(0,'0');
