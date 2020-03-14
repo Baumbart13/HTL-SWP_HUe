@@ -1,0 +1,10 @@
+->  Kapitel "Konsole" ab Seite 218 durchlesen
+->  Buch Seite 220
+        Uebung 1
+        Uebung 2
+->  Buch Seite 178
+        Durchlesen bis 183-Mitte, bzw bis exklusive "Wahlfreier Zugriff auf Dateien"
+->  Buch Seite 221
+        Uebung 3
+->  Buch Seite 172
+        Assertions durchlesen und durchdenken
