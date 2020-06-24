@@ -1,124 +1,63 @@
 package date2020_05_28_ASCII_Art.src;
 
-import date2020_05_28_ASCII_Art.res.ASCIIColor;
-import date2020_05_28_ASCII_Art.res.ASCIIGreyscaleValue;
-import miscForEverything.UI;
-import net.sf.image4j.codec.bmp.*;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.FilteredImageSource;
-import java.awt.image.ImageFilter;
-import java.awt.image.ImageProducer;
+import java.awt.image.*;
 import java.io.*;
-import java.util.LinkedList;
+
+import miscForEverything.UI;
+import static date2020_05_28_ASCII_Art.src.ASCIIConverter.*;
 
 public class ASCIIArt{
-	private final static String desktopPath = System.getProperty("user.home") + "/Desktop/";
+	private final static String desktopPath = System.getProperty("user.home") + "\\Desktop\\";
 	private static String fileName = "app.bmp";
 	private final static String outputFileName = "app2.bmp";
 	private final static String outputASCIIFileName = "app2.txt";
 
-	private static StringBuilder greyscaleToASCII(BufferedImage img){
-		StringBuilder asciiOutput = new StringBuilder(img.getHeight() + img.getWidth());
-		//char[] asciiOutput = new char[img.getHeight() + img.getWidth()+1];
-		int pixelCounter = 0;
+	private static String askForLoadedFile(){
 
-		for(int y = 0; y < img.getHeight(); ++y){
-			for(int x = 0; x < img.getWidth(); ++x){
-				//asciiOutput[pixelCounter] = chooseClosestASCII(new Color(img.getRGB(x, y)));
-				asciiOutput.append(chooseClosestASCII(new Color(img.getRGB(x, y))));
-			}
-			asciiOutput.append('\n');
-			//asciiOutput[pixelCounter] = '\n';
-		}
+		File path = new File("");
 
-		asciiOutput.trimToSize();
-		return asciiOutput;
+		// as long as no guilty file has been chosen
+		do{
+			System.out.println("Please enter the Path of your file, you want to convert: ");
+			path = new File(UI.readString());
+		}while(!(path.exists()) && path.getName().toLowerCase().endsWith(".bmp"));
+
+		return path.getAbsolutePath();
 	}
 
-	private static Character chooseClosestASCII(Color grayscalePixel){
-		int diff = Integer.MAX_VALUE;
-		Character outputChar = 'ß';
+	private static String askForSavedFile(){
+		System.out.println("Please enter, where the converted image should be saved: ");
 
-		for(ASCIIColor col : ASCIIGreyscaleValue.ALL_ASCIIS){
-			if(Math.abs(grayscalePixel.getRGB() - col.color().getRGB()) < diff){
-				diff = Math.abs(grayscalePixel.getRGB() - col.color().getRGB());
-
-				outputChar = col.character();
-			}
-		}
-		return outputChar;
-	}
-
-	private static Color rgbToGrayscalePixel(Color rgbPixel){
-		int red = rgbPixel.getRed();
-		int green = rgbPixel.getGreen();
-		int blue = rgbPixel.getBlue();
-
-		int gray = (rgbPixel.getRed() + rgbPixel.getGreen() + rgbPixel.getBlue()) / 3;
-
-		return new Color(gray, gray, gray);
-	}
-
-	private static BufferedImage rgbToGreyscale(BufferedImage img){
-
-		for(int y = 0; y < img.getHeight(); ++y){
-			for(int x = 0; x < img.getWidth(); ++x){
-				img.setRGB(x, y, rgbToGrayscalePixel(new Color(img.getRGB(x, y))).getRGB());
-			}
-		}
-
-		return img;
-	}
-
-	private static void writeASCIIImage(StringBuilder sequence){
-		try{
-			BufferedWriter bw = new BufferedWriter(new FileWriter(desktopPath + outputASCIIFileName));
-			bw.write(sequence.toString(), 0, sequence.length());
-		}catch(IOException e){
-			e.printStackTrace();
-		}
-	}
-
-	private static void writeImage(BufferedImage img){
-		try{
-			BMPEncoder.write(img, new File(desktopPath + outputFileName));
-		}catch(IOException e){
-			e.printStackTrace();
-		}finally{
-			System.out.println(UI.GREEN("Done saving Image") + UI.RESET());
-			UI.waitForKeypress();
-		}
-	}
-
-	private static BufferedImage loadGreyscaleImage(){
-		BufferedImage img = new BufferedImage(1,1, BufferedImage.TYPE_INT_RGB);
-
-		try{
-			img = BMPDecoder.read(new File(desktopPath + fileName));
-		}catch(IOException e){
-			e.printStackTrace();
-		}
-
-		return rgbToGreyscale(img);
+		return UI.readString();
 	}
 
 	public static void main(String[] args) {
 
+		String loadingPath = "";
+		String savingPath = "";
+
 		if(args.length != 0){
-			fileName = args[0];
+			for(String s : args) {
+
+				if (s.equalsIgnoreCase("-default")) {
+					loadingPath = desktopPath + fileName;
+					savingPath = desktopPath + outputFileName;
+				}
+
+			}
+		} else {
+			loadingPath = askForLoadedFile();
+			savingPath = askForSavedFile();
 		}
 
-		BufferedImage img = loadGreyscaleImage();
+		BufferedImage img = rgbToGreyscale(FileHandler.loadImage(loadingPath));
 
 		StringBuilder asciiImage = greyscaleToASCII(img);
 
-		writeASCIIImage(asciiImage);
-		writeImage(img);
+		FileHandler.writeASCIIImage(asciiImage, savingPath);
 	}
 
+	/* Different project
 	private static void addExtraInformation(File file, String info) throws IOException{
 
 		LinkedList<Integer> list = new LinkedList<Integer>();
@@ -144,4 +83,5 @@ public class ASCIIArt{
 			list.add(value);
 		}
 	}
+	*/
 }
