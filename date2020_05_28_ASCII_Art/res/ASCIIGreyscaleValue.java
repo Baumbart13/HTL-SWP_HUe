@@ -40,7 +40,7 @@ public interface ASCIIGreyscaleValue {
 	//ASCIIColor LOWERCASE_Z	= new ASCIIColor(new Color(208,208,208), 'z'); // same as LOWERCASE_C
 
 	// alphabet uppercase
-	ASCIIColor UPPERCASE_A	= new ASCIIColor(new Color(128,128,128), 'A');
+	ASCIIColor UPPERCASE_A	= new ASCIIColor(new Color(118,128,128), 'A');
 	ASCIIColor UPPERCASE_B	= new ASCIIColor(new Color(128,128,128), 'B');
 	ASCIIColor UPPERCASE_C	= new ASCIIColor(new Color(128,128,128), 'C');
 	ASCIIColor UPPERCASE_D	= new ASCIIColor(new Color(128,128,128), 'D');

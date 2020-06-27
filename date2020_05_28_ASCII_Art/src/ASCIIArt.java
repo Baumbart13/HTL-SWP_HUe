@@ -39,9 +39,13 @@ public class ASCIIArt{
 		if(args.length != 0){
 			for(String s : args) {
 
-				if (s.equalsIgnoreCase("-default")) {
+				if(s.equalsIgnoreCase("-insert")){
+					addInfo(desktopPath + fileName);
+					return;
+				}else if(s.equalsIgnoreCase("-default")){
 					loadingPath = desktopPath + fileName;
 					savingPath = desktopPath + outputFileName;
+					break;
 				}
 
 			}
@@ -55,6 +59,51 @@ public class ASCIIArt{
 		StringBuilder asciiImage = greyscaleToASCII(img);
 
 		FileHandler.writeASCIIImage(asciiImage, savingPath);
+	}
+
+	private static void addInfo(String path){
+		BufferedImage img = FileHandler.loadImage(path);
+
+		char[] info = "Transformed by Baumbart13".toCharArray();
+
+		System.out.println("Start adding info...");
+		/*int infoIterator = info.length-1;
+		for(int i = img.getWidth()-1; i > 0 && infoIterator > 0; --i, --infoIterator){
+			img.setRGB(i, img.getHeight()-1, info[infoIterator]);
+		}*/
+
+		FileHandler.writeImage(img, path);
+
+		try{
+			// read file
+			BufferedReader br = new BufferedReader(new FileReader(path));
+			String s = "";
+			StringBuilder sBuilder = new StringBuilder();
+			while((s = br.readLine()) != null){
+				sBuilder.append(s);
+			}
+			br.close();
+
+			// write info to file
+			sBuilder.replace(sBuilder.length()-info.length-1, sBuilder.length()-info.length-1, info.toString());
+
+			// write file
+			BufferedWriter bw = new BufferedWriter(new FileWriter(path));
+			bw.write(sBuilder.toString());
+			bw.close();
+
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+
+		StringBuilder debug = new StringBuilder();
+		int i = 0;
+		for(i = 600; i < img.getWidth(); ++i){
+			debug.append(img.getRGB(i, img.getHeight()-1));
+		}
+
+		System.out.println("Added info");
+		UI.waitForKeypress();
 	}
 
 	/* Different project
