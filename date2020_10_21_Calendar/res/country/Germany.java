@@ -42,8 +42,7 @@ public enum Germany {
         return "NATIONAL";
     }
 
-
-    public String[] getAll(){
+    public static String[] getAll(){
         return new String[]{BadenWuerttemberg.toString(), Bayern.toString(), Berlin.toString(), Brandenburg.toString(),
                 Bremen.toString(), Hamburg.toString(), Hessen.toString(), MecklenburgVorpommern.toString(),
                 Niedersachsen.toString(), NordrheinWestfalen.toString(), RheinlandPfalz.toString(), Saarland.toString(),
