@@ -3,19 +3,50 @@ package miscForEverything;
 import miscForEverything.CustomExceptions.CantCreateException;
 
 import java.io.IOException;
+import java.util.Random;
 import java.util.Scanner;
 
-import static miscForEverything.ConsoleSpecs.*;
-
+/**
+ * This class is used
+ */
 public class UI {
     private static Scanner reader = new Scanner(System.in);
+    private static Random random;
 
-    private UI() throws CantCreateException {
+    public UI() throws CantCreateException{
         throw new CantCreateException();
+    }
+
+    private static void resetScanner(){
+        reader = reader.reset();
+    }
+    private static void reseedRandom(){
+        random.setSeed(System.nanoTime());
+    }
+
+    public static double getRandomDouble(){
+        return getRandomDouble(Double.MIN_VALUE, Double.MAX_VALUE);
+    }
+
+    public static long getRandomLong(){
+        return getRandomLong(Long.MIN_VALUE, Long.MAX_VALUE);
+    }
+
+    public static double getRandomDouble(double lowerBound, double upperBound){
+        double value = lowerBound + (upperBound-lowerBound)*random.nextDouble();
+        reseedRandom();
+        return value;
+    }
+
+    public static long getRandomLong(long lowerBound, long upperBound){
+        long value = lowerBound + (long)(random.nextGaussian() * ((upperBound-lowerBound) + 1L));
+        reseedRandom();
+        return value;
     }
 
     public static void waitForKeypress(){
         try{
+            System.out.print("Press any key to continue...");
             System.in.read();
         }catch(IOException e){
             System.err.println("Nothing special to worry about" + System.lineSeparator() + e.getMessage());
@@ -30,7 +61,7 @@ public class UI {
             System.err.println("Bruh, what happened?");
             e.printStackTrace();
         }
-        reader = reader.reset();
+        resetScanner();
         return in.trim();
     }
 
@@ -45,7 +76,7 @@ public class UI {
             System.err.println("Bruh, what happened?");
             e.printStackTrace();
         }
-        reader = reader.reset();
+        resetScanner();
         return out;
     }
 
@@ -71,42 +102,42 @@ public class UI {
         public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
     }
 
-    public static String RESET  (String s){ return ANSI_RESET + s; }
-    public static String RESET  (){ return ANSI_RESET; }
+    public static String RESET  (String s){ return Console.ANSI_RESET + s; }
+    public static String RESET  (){ return Console.ANSI_RESET; }
 
-    public static String BLACK  (String s){ return ANSI_BLACK + s; }
-    public static String RED    (String s){ return ANSI_RED + s; }
-    public static String GREEN  (String s){ return ANSI_GREEN + s; }
-    public static String YELLOW (String s){ return ANSI_YELLOW + s; }
-    public static String BLUE   (String s){ return ANSI_BLUE + s; }
-    public static String PURPLE (String s){ return ANSI_PURPLE + s; }
-    public static String CYAN   (String s){ return ANSI_CYAN + s; }
-    public static String WHITE  (String s){ return ANSI_WHITE + s; }
+    public static String BLACK  (String s){ return Console.ANSI_BLACK + s; }
+    public static String RED    (String s){ return Console.ANSI_RED + s; }
+    public static String GREEN  (String s){ return Console.ANSI_GREEN + s; }
+    public static String YELLOW (String s){ return Console.ANSI_YELLOW + s; }
+    public static String BLUE   (String s){ return Console.ANSI_BLUE + s; }
+    public static String PURPLE (String s){ return Console.ANSI_PURPLE + s; }
+    public static String CYAN   (String s){ return Console.ANSI_CYAN + s; }
+    public static String WHITE  (String s){ return Console.ANSI_WHITE + s; }
 
-    public static String BLACK  (){ return ANSI_BLACK; }
-    public static String RED    (){ return ANSI_RED; }
-    public static String GREEN  (){ return ANSI_GREEN; }
-    public static String YELLOW (){ return ANSI_YELLOW; }
-    public static String BLUE   (){ return ANSI_BLUE; }
-    public static String PURPLE (){ return ANSI_PURPLE; }
-    public static String CYAN   (){ return ANSI_CYAN; }
-    public static String WHITE  (){ return ANSI_WHITE; }
+    public static String BLACK  (){ return Console.ANSI_BLACK; }
+    public static String RED    (){ return Console.ANSI_RED; }
+    public static String GREEN  (){ return Console.ANSI_GREEN; }
+    public static String YELLOW (){ return Console.ANSI_YELLOW; }
+    public static String BLUE   (){ return Console.ANSI_BLUE; }
+    public static String PURPLE (){ return Console.ANSI_PURPLE; }
+    public static String CYAN   (){ return Console.ANSI_CYAN; }
+    public static String WHITE  (){ return Console.ANSI_WHITE; }
 
-    public static String BLACK_BACKGROUND   (String s){ return ANSI_BLACK_BACKGROUND + s; }
-    public static String RED_BACKGROUND     (String s){ return ANSI_RED_BACKGROUND + s; }
-    public static String GREEN_BACKGROUND   (String s){ return ANSI_GREEN_BACKGROUND + s; }
-    public static String YELLOW_BACKGROUND  (String s){ return ANSI_YELLOW_BACKGROUND + s; }
-    public static String BLUE_BACKGROUND    (String s){ return ANSI_BLUE_BACKGROUND + s; }
-    public static String PURPLE_BACKGROUND  (String s){ return ANSI_PURPLE_BACKGROUND + s; }
-    public static String CYAN_BACKGROUND    (String s){ return ANSI_CYAN_BACKGROUND + s; }
-    public static String WHITE_BACKGROUND   (String s){ return ANSI_WHITE_BACKGROUND + s; }
+    public static String BLACK_BACKGROUND   (String s){ return Console.ANSI_BLACK_BACKGROUND + s; }
+    public static String RED_BACKGROUND     (String s){ return Console.ANSI_RED_BACKGROUND + s; }
+    public static String GREEN_BACKGROUND   (String s){ return Console.ANSI_GREEN_BACKGROUND + s; }
+    public static String YELLOW_BACKGROUND  (String s){ return Console.ANSI_YELLOW_BACKGROUND + s; }
+    public static String BLUE_BACKGROUND    (String s){ return Console.ANSI_BLUE_BACKGROUND + s; }
+    public static String PURPLE_BACKGROUND  (String s){ return Console.ANSI_PURPLE_BACKGROUND + s; }
+    public static String CYAN_BACKGROUND    (String s){ return Console.ANSI_CYAN_BACKGROUND + s; }
+    public static String WHITE_BACKGROUND   (String s){ return Console.ANSI_WHITE_BACKGROUND + s; }
 
-    public static String BLACK_BACKGROUND   (){ return ANSI_BLACK_BACKGROUND; }
-    public static String RED_BACKGROUND     (){ return ANSI_RED_BACKGROUND; }
-    public static String GREEN_BACKGROUND   (){ return ANSI_GREEN_BACKGROUND; }
-    public static String YELLOW_BACKGROUND  (){ return ANSI_YELLOW_BACKGROUND; }
-    public static String BLUE_BACKGROUND    (){ return ANSI_BLUE_BACKGROUND; }
-    public static String PURPLE_BACKGROUND  (){ return ANSI_PURPLE_BACKGROUND; }
-    public static String CYAN_BACKGROUND    (){ return ANSI_CYAN_BACKGROUND; }
-    public static String WHITE_BACKGROUND   (){ return ANSI_WHITE_BACKGROUND; }
+    public static String BLACK_BACKGROUND   (){ return Console.ANSI_BLACK_BACKGROUND; }
+    public static String RED_BACKGROUND     (){ return Console.ANSI_RED_BACKGROUND; }
+    public static String GREEN_BACKGROUND   (){ return Console.ANSI_GREEN_BACKGROUND; }
+    public static String YELLOW_BACKGROUND  (){ return Console.ANSI_YELLOW_BACKGROUND; }
+    public static String BLUE_BACKGROUND    (){ return Console.ANSI_BLUE_BACKGROUND; }
+    public static String PURPLE_BACKGROUND  (){ return Console.ANSI_PURPLE_BACKGROUND; }
+    public static String CYAN_BACKGROUND    (){ return Console.ANSI_CYAN_BACKGROUND; }
+    public static String WHITE_BACKGROUND   (){ return Console.ANSI_WHITE_BACKGROUND; }
 }
