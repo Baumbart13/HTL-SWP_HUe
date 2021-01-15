@@ -3,7 +3,7 @@ package miscForEverything.database.mySQL;
 public abstract class MySQL implements MySQLKeywords{
 	
 	/**
-	 * 
+	 * Creates a connection to the
 	 * @param hostname
 	 * @param user
 	 * @param password

@@ -1,16 +1,11 @@
 package miscForEverything.database.mySQL;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 import java.util.LinkedList;
 import java.util.List;
 
 public class DatabaseAccess extends MySQL {
-
-	public List<Table> mySQLTables = new LinkedList<Table>();
 
 	@Override
 	public String toString(){
@@ -19,11 +14,11 @@ public class DatabaseAccess extends MySQL {
 	}
 
 	/**
-	 *
-	 * @param hostname
-	 * @param user
-	 * @param password
-	 * @param databaseName
+	 * Instantiates a new MySQL-Database-connection.
+	 * @param hostname The address of the DB-server.
+	 * @param user The user, which whom the DB should be accessed.
+	 * @param password The password of this user.
+	 * @param databaseName The name of the DB.
 	 */
 	public DatabaseAccess(String hostname, String user, String password, String databaseName){
 		super(hostname, user, password, databaseName);
@@ -47,30 +42,53 @@ public class DatabaseAccess extends MySQL {
 		}
 	}
 
-	/**
-	 * Creates a new Table on this database.
-	 * @param args The first argument is the name of the table. Follows this pattern: tableName -> [varName -> varType]
-	 *             -> "PRIMARY" -> [primaryKey] -> "SECONDARY" -> [secondaryKeys].
-	 * @return Whether the table was created successfully or not.
-	 */
-	public boolean createTable(String... args){
+	public void openConnection(Connection con){
+		try{
+			if(con == null || con.isClosed()){
+				System.out.println("Connection gets opened...");
 
-		if(args.length < 3){ return false; }
-
-		return true;
+				con = DriverManager.getConnection("jdbc:mysql://" + this.mySQL_hostname + "/" +
+						this.mySQL_databaseName + "?user=" + this.mySQL_user + "&password=" + this.mySQL_password +
+						"&serverTimezone=UTC");
+			}else{
+				System.out.println("Connection is already open.");
+			}
+		}catch(SQLException e){
+			closeConnection(con);
+			System.err.println("SQL-Exception: " + e.getMessage() + System.lineSeparator() +
+					"SQL-Statement: " + e.getSQLState() + System.lineSeparator() +
+					"SQL-ErrorCode: " + e.getErrorCode() + System.lineSeparator());
+		}
 	}
 
-	public void DEBUG_executeStatement(String sql){
+	public void closeConnection(Connection con){
+		try{
+			if(con != null && !con.isClosed()){
+				System.out.println("Connection gets closed...");
+
+				con.close();
+			}else{
+				System.out.println("Connection is already closed.");
+			}
+		}catch(SQLException e){
+			con = null;
+			System.err.println("SQL-Exception: " + e.getMessage() + System.lineSeparator() +
+					"SQL-Statement: " + e.getSQLState() + System.lineSeparator() +
+					"SQL-ErrorCode: " + e.getErrorCode() + System.lineSeparator());
+			closeConnection(con);
+		}
+	}
+
+	public ResultSet DEBUG_executeStatement(String sql){
 		Connection con = null;
 		Connection DEBUG_con = null;
 
-		try{
+		try {
 			con = DriverManager.getConnection("jdbc:mysql://" + this.mySQL_hostname + "/" +
 					this.mySQL_databaseName + "?user=" + this.mySQL_user + "&password=" + this.mySQL_password +
 					"&serverTimezone=UTC");
 			Statement statement = con.createStatement();
-			statement.execute(sql);
-			con.close();
+			return statement.executeQuery(sql);
 		}catch(SQLException e){
 			System.err.println("SQL-Exception: " + e.getMessage() + System.lineSeparator() +
 					"SQL-Statement: " + e.getSQLState() + System.lineSeparator() +
@@ -78,7 +96,16 @@ public class DatabaseAccess extends MySQL {
 			e.printStackTrace();
 		}catch(Exception e){
 			e.printStackTrace();
+		}finally {
+			try {
+				if (con != null) {
+					con.close();
+				}
+			}catch(SQLException e){
+				e.printStackTrace();
+			}
 		}
+		return null;
 	}
 
 }
