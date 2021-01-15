@@ -63,41 +63,6 @@ public class Diagram extends Application {
 		return dates;
 	}
 
-	public JSONObject wtf(int yearString){
-		String _requestString = "https://deutsche-feiertage-api.de/api/v1/" + yearString;
-
-		java.net.HttpURLConnection connection = null;
-		//HttpClient client = HttpClient.newHttpClient();
-		try {
-			URL url = new URL(_requestString);
-			connection = (java.net.HttpURLConnection) url.openConnection();
-			connection.setRequestMethod("POST");
-			connection.setUseCaches(false);
-			connection.setRequestProperty("Content-Type", "application/json; uft-8");
-			connection.setRequestProperty("X-DFA-Token", "dfa");
-			connection.setRequestProperty("Accept", "application/json");
-			connection.setDoOutput(true);
-			// sending request
-			try (java.io.BufferedReader br = new java.io.BufferedReader(
-					new java.io.InputStreamReader(connection.getInputStream(), "utf-8"))) {
-				StringBuilder response = new StringBuilder();
-				String responseLine = null;
-				while((responseLine = br.readLine()) != null){
-					response.append(responseLine.trim());
-				}
-
-				//          System.out.println(response.toString());
-				//          JSONObject obj = new JSONObject(response.toString());
-				return new JSONObject(response.toString());
-			}
-
-		} catch (Exception e) {
-			System.out.println("Der requestString kann entweder nicht gefunden werden, oder nicht geöffnet werden");
-			e.printStackTrace();
-		}
-		return null;
-	}
-
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		try {
@@ -119,7 +84,7 @@ public class Diagram extends Application {
 			XYChart.Series series = new XYChart.Series();
 			series.setName(start.getYear() + " - " + end.getYear());
 			for(int i = 0; i < Days.values().length-2; ++i){
-				series.getData().add(new XYChart.Data(Days.values()[i].name(), Days.values()[i].getCount()));
+				series.getData().add(new XYChart.Data(Days.values()[i].name() + ": " + Integer.toString(Days.values()[i].getCount()), Days.values()[i].getCount()));
 			}
 
 			// Setting scene
@@ -135,6 +100,11 @@ public class Diagram extends Application {
 	}
 
 	public static void main(String[] args){
+
+		System.out.println("Parameters main:");
+		for(int i = 0; i < args.length; ++i){
+			System.out.println(i + ":\t" + args[i]);
+		}
 		launch(args);
 	}
 }
