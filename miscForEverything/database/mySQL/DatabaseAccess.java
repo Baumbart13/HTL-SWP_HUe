@@ -79,7 +79,35 @@ public class DatabaseAccess extends MySQL {
 		}
 	}
 
-	public ResultSet DEBUG_executeStatement(String sql){
+	public int executeUpdate(String sql){
+		Connection con = null;
+
+		try {
+			con = DriverManager.getConnection("jdbc:mysql://" + this.mySQL_hostname + "/" +
+					this.mySQL_databaseName + "?user=" + this.mySQL_user + "&password=" + this.mySQL_password +
+					"&serverTimezone=UTC");
+			Statement statement = con.createStatement();
+			return statement.executeUpdate(sql);
+		}catch(SQLException e){
+			System.err.println("SQL-Exception: " + e.getMessage() + System.lineSeparator() +
+					"SQL-Statement: " + e.getSQLState() + System.lineSeparator() +
+					"SQL-ErrorCode: " + e.getErrorCode() + System.lineSeparator());
+			e.printStackTrace();
+		}catch(Exception e){
+			e.printStackTrace();
+		}finally {
+			try {
+				if (con != null) {
+					con.close();
+				}
+			}catch(SQLException e){
+				e.printStackTrace();
+			}
+		}
+		return 0;
+	}
+
+	public ResultSet executeQuery(String sql){
 		Connection con = null;
 		Connection DEBUG_con = null;
 

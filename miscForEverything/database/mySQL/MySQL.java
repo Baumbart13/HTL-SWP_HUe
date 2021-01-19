@@ -1,5 +1,7 @@
 package miscForEverything.database.mySQL;
 
+import java.time.LocalDateTime;
+
 public abstract class MySQL implements MySQLKeywords{
 	
 	/**

@@ -14,17 +14,34 @@ public class StockUpdater {
     public static void main(String[] args) {
 
         if(args.length > 1){
-            if(args[0].equalsIgnoreCase("update")){
+        	/*
+        	autoupdate [STOCKSYMBOL] [APIKEY]
+        	 */
+			if(args[0].equalsIgnoreCase("autoupdate")) {
+				stocks = new BaumbartStock(database_hostname, database_user, database_password, database_databaseName);
+
+				if(args[1].equalsIgnoreCase("debug")){
+					stocks.DEBUG();
+					System.out.println("DEBUG-Command close successful");
+					System.exit(0);
+				}
+
+				if(args.length != 3){
+					System.exit(-1);
+				}
+
+
+				System.out.println("Automatic update");
+				stocks.updateStock(args[1], args[2]);
+				System.out.println("Exiting program...");
+				System.exit(0);
+
+			}else if(args[0].equalsIgnoreCase("update")){
                 stocks = new BaumbartStock(database_hostname, database_user, database_password, database_databaseName);
 
                 String APIKey = "";
-                if(args[1].equalsIgnoreCase("VBAX1XGSP5QC85SL") ||
-					args[1].equalsIgnoreCase("demo")){
-                	APIKey = "VBAX1XGSP5QC85SL";
-				}else {
-					System.out.println("Please enter your APIKey provided by alphavantage.com: ");
-					APIKey = UI.readString();
-				}
+                System.out.println("Please enter your APIKey provided by alphavantage.com: ");
+                APIKey = UI.readString();
 
 				/*
 				args[0] == update

@@ -2,15 +2,24 @@ package date2020_11_25_stockUpdater.src;
 
 import date2020_11_25_stockUpdater.src.StockAPI.StockAPIParser;
 import date2020_11_25_stockUpdater.src.StockAPI.StockAPITable;
+import date2020_11_25_stockUpdater.src.StockAPI.TickerAPITable;
+import date2020_11_25_stockUpdater.src.files.StockCSV;
+import miscForEverything.database.mySQL.Convert;
 import miscForEverything.database.mySQL.DatabaseAccess;
 import miscForEverything.database.mySQL.Table;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.SocketException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import static date2020_11_25_stockUpdater.src.StockValues.*;
+import static miscForEverything.database.mySQL.MySQLKeywords.*;
 
 public class BaumbartStock {
 	StockAPIParser stockAPIParser = null;
@@ -20,7 +29,7 @@ public class BaumbartStock {
 
     private final String API_DEFAULT_REQUEST_STRING = "https://www.alphavantage.co/query?" +
             "function=" + API_Functions.TIME_SERIES_INTRADAY + API_SEPARATE_SIGN +
-            "symbol=" + API_Symbols.IBM + API_SEPARATE_SIGN +
+            "symbol=IBM" + API_SEPARATE_SIGN +
             "interval=" + API_Intervals._5MIN + API_SEPARATE_SIGN +
             "apikey=" + "demo";
 
@@ -63,11 +72,18 @@ public class BaumbartStock {
          * We've got you covered! The Search Endpoint returns the best-matching symbols and market information based on keywords of your choice. The search results also contain match scores that provide you with the full flexibility to develop your own search and filtering logic.
          */
         String SEARCH_ENDPOINT = "SYMBOL_SEARCH";
-
+		/**
+		 * This API returns intraday time series of the equity specified, covering extended trading hours where applicable (e.g., 4:00am to 8:00pm Eastern Time for the US market). The intraday data is computed directly from the Securities Information Processor (SIP) market-aggregated data feed. You can query both raw (as-traded) and split/dividend-adjusted intraday data from this endpoint.
+		 * This API returns the most recent 1-2 months of intraday data and is best suited for short-term/medium-term charting and trading strategy development. If you are targeting a deeper intraday history, please use the Extended Intraday API.
+		 */
         String TIME_SERIES_INTRADAY = "TIME_SERIES_INTRADAY";
-    }
+		/**
+		 * This API returns historical intraday time series for the trailing 2 years, covering over 2 million data points per ticker. The intraday data is computed directly from the Securities Information Processor (SIP) market-aggregated data feed. You can query both raw (as-traded) and split/dividend-adjusted intraday data from this endpoint. Common use cases for this API include data visualization, trading simulation/backtesting, and machine learning and deep learning applications with a longer horizon.
+		 */
+		String TIME_SERIES_INTRADAY_EXTENDED = TIME_SERIES_INTRADAY + "_EXTENDED";
+	}
 
-    public interface API_RequestParams{
+	public interface API_RequestParams{
         String function = "function=";
         String symbol = "symbol=";
         String interval = "interval=";
@@ -75,10 +91,7 @@ public class BaumbartStock {
         String outputsize = "outputsize=";
         String datatype = "datatype=";
         String apikey = "apikey=";
-    }
-
-    public interface API_Symbols {
-        String IBM = "IBM";
+        String slice = "slice=";
     }
 
     public interface API_Intervals{
@@ -89,21 +102,51 @@ public class BaumbartStock {
 		String _60MIN = "60min";
 	}
 
-	public void writeUpdateToDatabase(StockAPITable table){
-		this.Database.DEBUG_executeStatement("USE " + StockUpdater.database_databaseName + ";");
-		this.Database.DEBUG_executeStatement(
-				"CREATE TABLE IF NOT EXISTS " + table.stockname + "(" +
-						"stock_datetime " + Table.DATETIME + " NOT NULL," +
-						"open FLOAT," +
-						"high FLOAT," +
-						"low FLOAT," +
-						"close FLOAT," +
-						"volume FLOAT," +
-						"PRIMARY KEY(stock_datetime)" +
+	public interface API_Slices{
+		static String getSlice(int months){
+			months = Math.abs(months);
+
+			return getSlice(months/2, months%2);
+		}
+
+		static String getSlice(int year, int month){
+
+			year = Math.abs(year);
+			month = Math.abs(month);
+
+			if(year == 0){
+				year = 1;
+			}
+			if(month == 0 || month > 12){
+				month = 1;
+			}
+
+			return "year" + year + "month" + month;
+		}
+	}
+
+	public void updateSymbols(){
+		this.Database.executeQuery("USE " + StockUpdater.database_databaseName + ";");
+		this.Database.executeUpdate(
+				"CREATE TABLE IF NOT EXISTS " + "tickers" + "(" +
+						"symbol VARCHAR(20) NOT NULL," +
+						"exchange VARCHAR(100) NOT NULL," +
+						"assetType VARCHAR(20) NOT NULL," +
+						"ipoDate " + Table.DATETIME + " NOT NULL," +
+						"delistingDate " + Table.DATETIME + "," +
+						"status VARCHAR(20)," +
+						"PRIMARY KEY(symbol)" +
 						");");
 
+		TickerAPITable ticker;
+	}
+
+	public void writeUpdateToDatabase(StockAPITable table){
+		table.mySqlCreateTable(StockUpdater.database_databaseName);
+		table.mySqlCreateTable(StockUpdater.database_databaseName);
+
 		for(LocalDateTime dateTime : table.value.keySet()){
-			this.Database.DEBUG_executeStatement("INSERT INTO " + table.stockname + "(" +
+			this.Database.executeUpdate("INSERT INTO " + table.getMySQL_tableName() + "(" +
 					"stock_datetime, open, high, low, close, volume)VALUES(" +
 					"\'" + dateTime.toString().replace('T', ' ') + "\'," +
 					table.value.get(dateTime).get(open) + "," +
@@ -111,9 +154,114 @@ public class BaumbartStock {
 					table.value.get(dateTime).get(low) + "," +
 					table.value.get(dateTime).get(close) + "," +
 					table.value.get(dateTime).get(volume) +
-					");");
+					")" +
+					"ON DUPLICATE KEY UPDATE " +
+					"open="		+ table.value.get(dateTime).get(open) +
+					",high="	+ table.value.get(dateTime).get(high) +
+					",low="		+ table.value.get(dateTime).get(low) +
+					",close="	+ table.value.get(dateTime).get(close) +
+					",volume="	+ table.value.get(dateTime).get(volume) +
+					";");
 		}
 		return;
+	}
+
+	/**
+	 * Receive a List of all Tickers available from used API.
+	 *
+	 * @return a list of all available tickers of alphavantage's API.
+	 *
+	 * @see TickerAPITable
+	 */
+	public List<TickerAPITable> getAPI_Symbols() {
+		return new LinkedList<TickerAPITable>();
+	}
+
+	/**
+	 * Returns the last 200 values if there are any.
+	 *
+	 * @param stockName the tickername of the stock.
+	 *
+	 * @return a HashMap with the LocalDateTime, that can easily converted to a LocalDate, as key with the close-values of the stock on the key=day.
+	 */
+	public HashMap<LocalDateTime, Double> getDataFromDatabase(String stockName){
+
+		java.sql.Connection con = null;
+
+		HashMap<LocalDateTime, Double> output = new HashMap<LocalDateTime, Double>();
+		try {
+			con = java.sql.DriverManager.getConnection("jdbc:mysql://" + Database.getMySQL_hostname() + "/" +
+					Database.getMySQL_databaseName() + "?user=" + Database.getMySQL_user() + "&password=" + Database.getMySQL_password() +"&serverTimezone=UTC");
+			java.sql.Statement statement = con.createStatement();
+			ResultSet rs = statement.executeQuery(SELECT + "stock_datetime, close" + FROM + stockName +
+					WHERE + "stock_datetime >= " + Convert.javaToMysql_LocalDateTime(LocalDateTime.now().minusDays(200))
+			);
+
+			// Extract db-info
+			while (rs.next()) {
+				/*output.put( Convert.mysqlToJava_LocalDateTime(rs.getString(0)),
+						Double.valueOf(rs.getString(1)));*/
+				output.put( Convert.mysqlToJava_LocalDateTime(rs.getObject(1).toString()), rs.getDouble(2));
+			}
+		}catch(SQLException e) {
+			e.printStackTrace();
+		}catch(Exception e){
+			System.err.println("FUCK!!! What happened?!");
+			e.printStackTrace();
+		}finally{
+			try{
+				if(con != null){
+					con.close();
+				}
+			}catch(SQLException e){
+				e.printStackTrace();
+			}
+			return output;
+		}
+	}
+
+	/**
+	 * Returns values of the last N-Months if there are any.
+	 *
+	 * @param stockName the tickername of the stock.
+	 * @param lastMonths How many months in the past is the oldest Day.
+	 *
+	 * @return a HashMap with the LocalDateTime, that can easily converted to a LocalDate, as key with the close-values of the stock on the key=day.
+	 */
+	public HashMap<LocalDateTime, Double> getDataFromDatabase(String stockName, int lastMonths){
+
+		java.sql.Connection con = null;
+
+		HashMap<LocalDateTime, Double> output = new HashMap<LocalDateTime, Double>();
+		try {
+			con = java.sql.DriverManager.getConnection("jdbc:mysql://" + Database.getMySQL_hostname() + "/" +
+					Database.getMySQL_databaseName() + "?user=" + Database.getMySQL_user() + "&password=" + Database.getMySQL_password() +"&serverTimezone=UTC");
+			java.sql.Statement statement = con.createStatement();
+			ResultSet rs = statement.executeQuery(SELECT + "stock_datetime, close" + FROM + stockName +
+					WHERE + "stock_datetime >= " + Convert.javaToMysql_LocalDateTime(LocalDateTime.now().minusMonths(lastMonths))
+			);
+
+			// Extract db-info
+			while (rs.next()) {
+				/*output.put( Convert.mysqlToJava_LocalDateTime(rs.getString(0)),
+						Double.valueOf(rs.getString(1)));*/
+				output.put( Convert.mysqlToJava_LocalDateTime(rs.getObject(1).toString()), rs.getDouble(2));
+			}
+		}catch(SQLException e) {
+			e.printStackTrace();
+		}catch(Exception e){
+			System.err.println("FUCK!!! What happened?!");
+			e.printStackTrace();
+		}finally{
+			try{
+				if(con != null){
+					con.close();
+				}
+			}catch(SQLException e){
+				e.printStackTrace();
+			}
+			return output;
+		}
 	}
 
 	public BaumbartStock(String database_hostname, String database_user, String database_password, String database_databaseName){
@@ -171,12 +319,16 @@ public class BaumbartStock {
 	 * @param stockName
 	 */
     public void updateStock(String stockName, String apiKey){
-		System.err.println("updateStock");
+		System.err.println("updateStock(String,String)");
 
 		StockAPITable table = new StockAPITable();
 
 		try {
-			table = this.stockAPIParser.getStocks(stockName, apiKey);
+			table = this.stockAPIParser.getStocksFromAPI(stockName, apiKey);
+		}catch(SocketException e){
+			System.err.println("There has been an error with your connection. Exiting Program now.");
+			e.printStackTrace();
+			System.exit(-1);
 		}catch(MalformedURLException e){
 			e.printStackTrace();
 		}catch(IOException e){
@@ -189,10 +341,36 @@ public class BaumbartStock {
 		writeUpdateToDatabase(table);
     }
 
-    public void DEBUG(){
-this.Database.DEBUG_executeStatement("USE " + StockUpdater.database_databaseName + ";");
-		this.Database.DEBUG_executeStatement(
-				 "CREATE TABLE IF NOT EXISTS IBM (" +
+    public void updateStock(String stockName, String apiKey, int lastMonths){
+    	System.err.println("updateStock(String,String,int)");
+
+    	StockCSV table = new StockCSV();
+
+		try {
+			table = this.stockAPIParser.getStocksFromAPI(stockName, apiKey, lastMonths);
+		}catch(SocketException e){
+			System.err.println("There has been an error with your connection. Exiting Program now.");
+			e.printStackTrace();
+			System.exit(-1);
+		}catch(MalformedURLException e){
+			e.printStackTrace();
+		}catch(IOException e){
+			e.printStackTrace();
+		}catch(Exception e){
+			System.err.println("BRUH, what happened?!");
+			e.printStackTrace();
+		}
+
+		writeUpdateToDatabase(new StockAPITable(table));
+	}
+
+	/**
+	 * Executes Commands directly written inside of this method.
+	 */
+	public void DEBUG(){
+		this.Database.executeQuery("USE " + StockUpdater.database_databaseName + ";");
+		this.Database.executeQuery(
+				 "CREATE TABLE IF NOT EXISTS DEFAULT_STOCK (" +
 						"stock_datetime " + Table.DATETIME + " NOT NULL," +
 						"open FLOAT," +
 						"high FLOAT," +
@@ -201,9 +379,32 @@ this.Database.DEBUG_executeStatement("USE " + StockUpdater.database_databaseName
 						"volume FLOAT," +
 						"PRIMARY KEY(stock_datetime)" +
 						");");
+		StockAPITable defaultStock = new StockAPITable();
+		for(LocalDateTime dateTime : defaultStock.value.keySet()) {
+			this.Database.executeQuery("INSERT INTO " + defaultStock.getMySQL_tableName() + "(" +
+					"stock_datetime, open, high, low, close, volume)VALUES(" +
+					"\'" + dateTime.toString().replace('T', ' ') + "\'," +
+					defaultStock.value.get(dateTime).get(open) + "," +
+					defaultStock.value.get(dateTime).get(high) + "," +
+					defaultStock.value.get(dateTime).get(low) + "," +
+					defaultStock.value.get(dateTime).get(close) + "," +
+					defaultStock.value.get(dateTime).get(volume) +
+					")" +
+					"ON DUPLICATE KEY UPDATE " +
+					"open=" + defaultStock.value.get(dateTime).get(open) +
+					",high=" + defaultStock.value.get(dateTime).get(high) +
+					",low=" + defaultStock.value.get(dateTime).get(low) +
+					",close=" + defaultStock.value.get(dateTime).get(close) +
+					",volume=" + defaultStock.value.get(dateTime).get(volume) +
+					";");
+		}
 		System.out.println("DEBUG command executed");
+		System.err.println("DEBUG command executed");
 	}
 
+	/**
+	 * Installs the automatic updater of this program.
+	 */
     public static void installUpdater(){
     	BaumbartStockInstaller installer = new BaumbartStockInstaller();
     	if(System.getProperty("os.name").toLowerCase().contains("windows")){
@@ -234,6 +435,9 @@ this.Database.DEBUG_executeStatement("USE " + StockUpdater.database_databaseName
 		}
     }
 
+    /**
+	 * Uninstalls the automatic updater of this program.
+     */
     public static void uninstallUpdater(){
 		System.err.println("uninstallUpdate");
     }

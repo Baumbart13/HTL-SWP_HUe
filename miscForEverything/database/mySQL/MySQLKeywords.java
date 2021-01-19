@@ -1,5 +1,7 @@
 package miscForEverything.database.mySQL;
 
+import org.jetbrains.annotations.NotNull;
+
 public interface MySQLKeywords{
 	public static final String _QuerySpace = " ";
 	public static final String _QueryEnd = ";";
@@ -58,42 +60,52 @@ public interface MySQLKeywords{
 	public static final String DATETIME = " DATETIME ";
 	public static final String TIMESTAMP = " TIMESTAMP ";
 
+	@NotNull
 	public static String CHAR(int length) {
 		return " CHAR(" + Math.abs(length) + ") ";
 	}
 
+	@NotNull
 	public static String VARCHAR(int length) {
 		return " VARCHAR(" + Math.abs(length) + ") ";
 	}
 
+	@NotNull
 	public static String PRIMARY_KEY(String... args) {
 		StringBuilder output = new StringBuilder("PRIMARY KEY(");
 
-		try {
-			for (int i = 0; i < args.length - 1; ++i) {
-				output.append(args[i] + ", ");
-			}
-			output.append(args[args.length - 1] + ") ");
-		} catch (NullPointerException e) {
-			e.printStackTrace();
-			return "";
+		for (int i = 0; i < args.length - 1; ++i) {
+			output.append(args[i] + ", ");
 		}
+		output.append(args[args.length - 1] + ") ");
 
 		return output.toString();
 	}
 
+	@NotNull
 	public static String SECONDARY_KEY(String... args) {
 		StringBuilder output = new StringBuilder("SECONDARY KEY(");
 
-		try {
-			for (int i = 0; i < args.length - 1; ++i) {
-				output.append(args[i] + ", ");
-			}
-			output.append(args[args.length - 1] + ") ");
-		} catch (NullPointerException e) {
-			e.printStackTrace();
-			return "";
+		for (int i = 0; i < args.length - 1; ++i) {
+			output.append(args[i] + ", ");
 		}
+		output.append(args[args.length - 1] + ") ");
+
 		return output.toString();
+	}
+
+	@NotNull
+	public static String COUNT(String s){
+		return " COUNT(" + s + ") ";
+	}
+
+	@NotNull
+	public static String MAX(String s){
+		return " MAX(" + s + ") ";
+	}
+
+	@NotNull
+	public static String AVG(String s){
+		return " AVG(" + s + ") ";
 	}
 }
