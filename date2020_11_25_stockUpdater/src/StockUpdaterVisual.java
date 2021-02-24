@@ -9,19 +9,26 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.chart.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.image.Image;
+import javafx.scene.image.PixelFormat;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import miscForEverything.Environment;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.*;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.*;
 
 public class StockUpdaterVisual extends Application {
@@ -39,6 +46,9 @@ public class StockUpdaterVisual extends Application {
 	private static String apiPath = "";
 	private static String databasePath = "";
 	private static String symbolsPath = "";
+
+	private static boolean autoupdate = false;
+	private Stage stage;
 
 	public StockUpdaterVisual(){
 		try{
@@ -170,6 +180,10 @@ public class StockUpdaterVisual extends Application {
 		return new StockDatabase(credentials[0], credentials[1], credentials[2], credentials[3]);
 	}
 
+	public Stage getStage(){
+		return this.stage;
+	}
+
 	/**
 	 * Prepares the whole layout of the application.
 	 * @param stage The Stage provided by the <code>start</code> method
@@ -191,7 +205,7 @@ public class StockUpdaterVisual extends Application {
 		Collections.sort(ol);
 		currentSymbol = ol.get(new Random().nextInt(ol.size()));
 
-
+		this.stage = stage;
 		//final var text = new TextField(currentSymbol);
 
 		final var cmbBox = new ComboBox<String>(ol);
@@ -215,6 +229,12 @@ public class StockUpdaterVisual extends Application {
 			requestStockDataAsync(currentSymbol);
 		});
 
+		var bttnScreenshot = new Button();
+		bttnScreenshot.setText("Take Screenshot");
+		bttnScreenshot.setOnAction((e)->{
+			takeScreenshot();
+		});
+
 
 		final var xAxis = new CategoryAxis();
 		final var yAxis = new NumberAxis();
@@ -230,7 +250,7 @@ public class StockUpdaterVisual extends Application {
 		}else{
 			headBox.getChildren().add(cmbBox);
 		}
-		headBox.getChildren().addAll(bttnRequest);
+		headBox.getChildren().addAll(bttnRequest, bttnScreenshot);
 		vBoxMain.getChildren().addAll(headBox, chart);
 
 		var scene = new Scene(vBoxMain, windowWidth, windowHeigth);
@@ -242,18 +262,32 @@ public class StockUpdaterVisual extends Application {
 
 		prepareLayout(primaryStage);
 
-
-
 		primaryStage.setX(windowWidth - primaryStage.getWidth());
 		primaryStage.setY(windowHeigth - primaryStage.getHeight());
 
-		primaryStage.show();
+		if(!autoupdate) {
+			primaryStage.show();
+		}
 
 		if(currentSymbol.contains("-")){
 			currentSymbol = currentSymbol.replace('-', '_');
 		}
 		requestStockDataAsync(currentSymbol);
+
+		if(autoupdate){
+			System.exit(0);
+		}
 		//System.exit(0);
+	}
+
+	public static void main(String[] args) {
+		System.out.println("Working dir: " + System.getProperty("user.dir"));
+
+		System.out.println("Handling arguments");
+		StockUpdaterVisual.argumentHandling(Arrays.asList(args));
+
+		System.out.println("Launching application");
+		StockUpdaterVisual.launch(args);
 	}
 
 	public void updateDatabase(StockResults results){
@@ -271,19 +305,51 @@ public class StockUpdaterVisual extends Application {
 	 * @param symbol The symbol of the stock
 	 */
 	private void requestStockDataAsync(String symbol){
-		new Thread(() -> {
-			try {
-				final var result = apiParser.request(symbol, ApiParser.Function.TIME_SERIES_DAILY_ADJUSTED);
 
-				updateDatabase(result);
-				Platform.runLater(() ->{
+		if(!autoupdate) {
+			new Thread(() -> {
+				try {
+
+					final var result = apiParser.request(symbol, ApiParser.Function.TIME_SERIES_DAILY_ADJUSTED);
+
+					updateDatabase(result);
+					Platform.runLater(() -> {
+						updateChartFromDb(symbol);
+					});
+
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}).start();
+		}else{
+			final int timesToFetch = 2;
+			for (int i = 0; i < timesToFetch; ++i) {
+				try {
+					final var result = apiParser.request(symbol, ApiParser.Function.TIME_SERIES_DAILY_ADJUSTED);
+
+					updateDatabase(result);
 					updateChartFromDb(symbol);
-				});
+					takeScreenshot();
 
-			} catch (IOException e) {
-				e.printStackTrace();
+
+					// hmm... see if I can short this to 1 order
+					var temp = symbols.keySet().toArray(new String[0]);
+					currentSymbol = temp[new Random().nextInt(temp.length)];
+
+					// well.. yeah.. I can short it, but it gets worse... I've got to introduce this part of program a new variable
+					//currentSymbol = symbols.keySet().toArray(new String[0])[new Random().nextInt(symbols.keySet().toArray().length)];
+
+
+					// Prototypes.. did not work well
+					//currentSymbol = ((String[])symbols.keySet().toArray())[new Random().nextInt(symbols.keySet().size())];
+					//currentSymbol = ol.get(new Random().nextInt(ol.size()));
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-		}).start();
+		}
 	}
 
 	/**
@@ -310,66 +376,154 @@ public class StockUpdaterVisual extends Application {
 
 		results.Name = symbols.get(results.Symbol);
 
+
+
 		for(var item : results.getDataPoints()){
 			closeSeries.getData().add(new XYChart.Data(item.DateTime.toString(), item.Values.get(StockValueType.close)));
 			avgSeries.getData().add(new XYChart.Data(item.DateTime.toString(), item.Values.get(StockValueType.avg200)));
 		}
 
+		System.out.println("Number of elements in results: " + results.getDataPoints().size());
+		System.out.println("Number of elements in closeSeries: " + closeSeries.getData().size());
+		System.out.println("Number of elements in avgSeries: " + avgSeries.getData().size());
 
 		chart.getData().clear();
 		chart.getData().add(closeSeries);
 		chart.getData().add(avgSeries);
 
-		// TODO: Bounds not displayed correctly
-		double lowerBound = getLowerBound(results);
-		double upperBound = getUpperBound(results);
-		((NumberAxis)chart.getYAxis()).setLowerBound(lowerBound);
-		((NumberAxis)chart.getYAxis()).setUpperBound(upperBound);
+		// Value-boundaries
+		chart.getYAxis().setAutoRanging(false);
+		float lowerBoundY = Math.round((results.getLowerBound(StockValueType.close)) - (results.getRange(StockValueType.close) * 0.1f));
+		if(lowerBoundY < 0f) lowerBoundY = 0.0f;
+		float upperBoundY = Math.round((results.getUpperBound(StockValueType.close)) + (results.getRange(StockValueType.close) * 0.1f));
+		((NumberAxis)chart.getYAxis()).setLowerBound(lowerBoundY);
+		((NumberAxis)chart.getYAxis()).setUpperBound(upperBoundY);
+
+		// Date-boundaries
+		//chart.getXAxis().setAutoRanging(false);
+		//var lowerBoundX = results.getOldestDate();
+		//var upperBoundX = results.getNewestDate();
+		//((CategoryAxis)chart.getXAxis())
 
 		// TODO: Colors not displayed correctly
 		var closeLine = closeSeries.getNode().lookup(".default-color0.chart-series-line");
-		var closeLegend = closeSeries.getNode().lookup(".default-color0.chart-line-symbol");
+		var closeLegend = closeSeries.getNode().lookup(".default-color0.series0");
 		//if value greater than avg => green line
 		if(results.getDataPoints().get(results.getDataPoints().size()-1).Values.get(StockValueType.close) >
 				results.getDataPoints().get(results.getDataPoints().size()-1).Values.get(StockValueType.avg200)){
 			closeLine.setStyle("-fx-stroke: rgba(0,255,0,1.0);");
+
+			assert closeLegend != null;
 			closeLegend.setStyle("-fx-stroke: rgba(0,255,0,1.0);");
 
 		// if value less than avg => red line
 		}else if(results.getDataPoints().get(results.getDataPoints().size()-1).Values.get(StockValueType.close) <
 				results.getDataPoints().get(results.getDataPoints().size()-1).Values.get(StockValueType.avg200)) {
 			closeLine.setStyle("-fx-stroke: rgba(255,0,0,1.0);");
+
+			assert closeLegend != null;
 			closeLegend.setStyle("-fx-stroke: rgba(255,0,0,1.0);");
 		// else => blue line
 		}else{
 			closeLine.setStyle("-fx-stroke: rgba(0,0,255,1.0);");
+
+			assert closeLegend != null;
 			closeLegend.setStyle("-fx-stroke: rgba(0,0,255,1.0);");
 		}
 
 		var avgLine = avgSeries.getNode().lookup(".default-color1.chart-series-line");
-		var avgLegend = avgSeries.getNode().lookup(".default-color1.chart-area-symbol");
+		var avgLegend = avgSeries.getNode().lookup(".default-color1.series1");
 		avgLine.setStyle("-fx-stroke: rgba(0,200,200,1.0);");
 		avgLegend.setStyle("-fx-stroke: rgba(0,200,200,1.0);");
 
-		chart.setTitle(String.format("Stock value for \"%s\"", results.Name));
+		chart.setTitle(String.format("Stock value for \"%s\"%nNo. of items loaded: %d",
+				results.Name, results.getDataPoints().size()));
 	}
 
-	private double getLowerBound(StockResults results){
-		double out = Double.MAX_VALUE;
-		for(var type : StockValueType.values()){
-			if(type == StockValueType.volume) continue;
-			out = Math.min(out, results.getLowerBound(type));
+	/**
+	 * Takes a screenshot of application.
+	 */
+	public void takeScreenshot(){
+		var fc = new JFileChooser();
+		var fsv = fc.getFileSystemView();
+		var homeDir = fsv.getHomeDirectory();
+		var myDocuments = homeDir.getParent();
+		myDocuments = myDocuments.concat(String.format("%sDocuments%sStockUpdaterBaumi",
+				File.separator, File.separator));
+
+
+		File dir = new File(myDocuments);
+		if(!dir.exists()) {
+			dir.mkdirs();
+			dir.mkdir();
 		}
-		return out;
+		File file = new File(String.format("%s%s%s_%s.png",
+				dir, File.separator, LocalDate.now().toString(), currentSymbol));
+		WritableImage writableImage = stage.getScene().snapshot(null);
+
+		// Before testrun:			Did StackOverflow help?
+		// After testrun:			Nope... StackOverflow used an Image, but I have an WritableImage
+		//							 let's try to convert it somehow functioning
+		// Before testrun#2:		Simple casting could work
+		// After testrun#2:			Nope.. neither did this idea work..
+		// Before testrun#3:		What about do the most obvious thing, when having a "WritableImage"? - Just damn try to write it. It's fucking writable.. gosh, I'm so stupid sometimes
+		// While testrun#3-build:	I'm tired of this... (see "Own code for testrun#3 for further info of this comment) where's the maven dependency for SwingFXUtils?
+		//							 P.S.: testrun#3 never started.. it went straight to testrun#4
+		// Before testrun#4:		Did not want to do it, because of trying to use as few as possible, but can't think any other way anymore
+		// After testrun#4:			Did not work due to invalid module name.. can't catch it.. darn
+
+		// Own code for testrun#4
+		/*try {
+			ImageIO.write(SwingFXUtils.fromFXImage(writableImage, null), "png", file);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
+		// Own code for testrun#4
+
+
+		// Own code for testrun#3
+		/*try{
+			// Damn... BufferedWriter only supports way too primitive data for this case.. never needed anything other than them
+			//var bw = new BufferedWriter(new FileWriter(file));
+
+			var bos = new BufferedOutputStream(new FileOutputStream(file));
+
+
+			bos.write(writableImage);
+		}*/
+		// Own code for testrun#3 end
+		
+		// StackOverflow code
+		/*var width = (int)writableImage.getWidth();
+		var height = (int)writableImage.getHeight();
+		var pixelReader = writableImage.getPixelReader();
+		byte[] buffer = new byte[width * height * 4];
+		var pixelFormat = PixelFormat.getByteBgraInstance();
+		pixelReader.getPixels(0, 0, width, height, pixelFormat, buffer, 0, width*4);
+		try{
+			var out = new BufferedOutputStream(new FileOutputStream(file));
+			for(var count = 0; count < buffer.length; count += 4){
+				out.write(buffer[count+2]);
+				out.write(buffer[count+1]);
+				out.write(buffer[count]);
+				out.write(buffer[count+3]);
+			}
+			out.flush();
+			out.close();
+		}catch(IOException e){
+			e.printStackTrace();
+		}*/
+		// StackOverflow code end
+
+
+		// TODO: Change this output to label on application instead of giving it the terminal
+		System.out.printf("Saved to \"%s\"%n", file);
 	}
 
-	private double getUpperBound(StockResults results){
-		double out = Double.MIN_VALUE;
-		for(var type : StockValueType.values()){
-			if(type == StockValueType.volume) continue;
-			out = Math.max(out, results.getUpperBound(type));
+	private void test(){
+		for(var s : chart.getCssMetaData()){
+			System.out.println(s);
 		}
-		return out;
 	}
 
 	/**
@@ -380,22 +534,23 @@ public class StockUpdaterVisual extends Application {
 		DEBUG.loadAllSymbolsAndSaveAsCsv(inProduction);
 	}
 
-	public static void main(String[] args){
-
-		if(!(args == null || args.length < 1)){
-
-			argumentHandling(Arrays.asList(args));
-		}
-		launch(args);
-	}
-
 	/**
 	 * Handles all program arguments passed on starting the application.
 	 * @param args The array of Strings of the main method as a List.
 	 */
-	private static void argumentHandling(List<String> args){
-		if(args == null || args.size() == 0){
+	public static void argumentHandling(List<String> args){
+		if(args == null){
 			System.exit(0);
+		}
+
+		if(args.contains("--install")){
+
+			StockUpdaterInstaller.install();
+		}
+
+		if(args.contains("--uninstall")){
+			// TODO: implement uninstallation
+			StockUpdaterInstaller.uninstall();
 		}
 
 		boolean inProduction = false;
@@ -411,6 +566,10 @@ public class StockUpdaterVisual extends Application {
 			apiPath = String.format("res%sapi.csv", File.separator);
 			databasePath = String.format("res%sdatabase.csv", File.separator);
 			symbolsPath = String.format("res%ssymbols.csv", File.separator);
+		}
+
+		if(args.contains("autoupdate")){
+			autoupdate = true;
 		}
 
 		var windowedModeIndex = args.indexOf(ProgramArguments.windowed.toString());
@@ -430,6 +589,5 @@ public class StockUpdaterVisual extends Application {
 			DEBUG(inProduction);
 			System.exit(0);
 		}
-
 	}
 }

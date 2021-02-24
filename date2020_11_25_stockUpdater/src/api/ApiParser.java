@@ -59,6 +59,10 @@ public class ApiParser {
 			return String.format(m_ApiUrl + "function=%s&apiKey=%s",
 					fun.name(), m_ApiKey);
 		}
+		if(fun == Function.TIME_SERIES_DAILY_ADJUSTED){
+			return String.format(m_ApiUrl + "function=%s&symbol=%s&outputsize=full&datatype=json&apikey=%s",
+					fun.name(), symbol, m_ApiKey);
+		}
 		return String.format(m_ApiUrl + "function=%s&symbol=%s&datatype=json&apikey=%s",
 				fun.name(), symbol, m_ApiKey);
 	}
@@ -91,6 +95,7 @@ public class ApiParser {
 		convertJsonToStockResults(json, results);
 
 		System.out.printf("Requesting from:%30.28s%nRequested Data:%27.24s%n", url, json);
+		System.out.printf("Request has %d elements%n", results.getDataPoints().size());
 		return results;
 	}
 
