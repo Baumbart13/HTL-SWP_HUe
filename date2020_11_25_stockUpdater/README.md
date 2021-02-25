@@ -24,7 +24,7 @@ Erweiterungen im 2ten Semester:
 
 - Splitcorrection
 - Beginn und Enddatumangabe vorm Zeichnen für die Charts
-- Charts als Bild abspeichern
-- Mehrere Aktien hintereinander vond er API abrufen
-- Mehrere Aktien hintereinander zeichnen
+- Charts als Bild abspeichern   - Check
+- Mehrere Aktien hintereinander von der API abrufen   - Check
+- Mehrere Aktien hintereinander zeichnen    - Check
 - Mehrere Charts auf eine mini-Website anzeigen
